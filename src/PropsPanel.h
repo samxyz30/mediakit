@@ -4,13 +4,31 @@
 #include <QVBoxLayout>
 #include <QFileInfo>
 #include <QTreeWidget>
+#include <QComboBox>
+#include <QSpinBox>
+#include <QMessageBox>
+#include <QFileDialog>
 
 #include <QProcess>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
-#include "common.h"
 
+#include "common.h"
+#include "JobQueue.h"
+
+
+struct MkOutputSettings {
+  QString container = "mp4";
+  QString codecVideo = "libx264";
+  bool useCrf = true;
+  int crf = 23;
+  int bitrate = 0;
+  bool noVideo = false;
+  bool noAudio = false;
+  QString codecAudio = "aac";
+  int bitrateAudio = 128;
+};
 
 class MkPropsPanel : public QWidget {
   Q_OBJECT
@@ -83,10 +101,35 @@ public:
   }
 
 
+  void exportTranscode(MkJobQueue* queue) {
+    if (m_currentPath.isEmpty()) {
+      QMessageBox::warning(this, "export", "no file selected");
+      return;
+    }
+
+    // do NOT use m_currentPath, figure something nicer out
+    const QString outFile = QFileDialog::getSaveFileName(
+      this,
+      "export transcode", m_currentPath,
+      "All files (*)"
+    );
+    if (outFile.isEmpty()) return;
+
+    QMessageBox::critical(this, "TODO", "TODO");
+    return;
+
+    // TODO: construct command from m_output
+    MkJobFFmpeg::Spec spec;
+    spec.name = QFileInfo(outFile).fileName();
+    queue->enqueue(spec);
+  }
+
+
 private:
   QString m_currentPath;
   QLabel* m_title;
   QTreeWidget* m_tree;
+  MkOutputSettings m_output;
 
 
   void populateData(const QJsonObject& root) {
@@ -105,11 +148,77 @@ private:
 
     if (!format.isEmpty()) {
       auto sect = new QTreeWidgetItem(m_tree, {"format", ""});
+      sect->setExpanded(true);
+
       auto timestr = MkCommon::fmtTime(valueof(format, "duration").toDouble() * 1000.0);
       new QTreeWidgetItem(sect, {"duration", timestr});
-
       new QTreeWidgetItem(sect, {"container", valueof(format, "format_long_name")});
       new QTreeWidgetItem(sect, {"bitrate", QString("%1 kbps").arg(valueof(format, "bit_rate").toLongLong() / 1000)});
     }
+
+
+    // TODO: clean up. i know this is bad.
+    auto output = new QTreeWidgetItem(m_tree, {"output", ""});
+    output->setExpanded(true);
+    auto containerItem = new QTreeWidgetItem(output, {"container", ""});
+    auto container = new QComboBox(m_tree);
+    container->addItem("MP4", "mp4");
+    container->addItem("MKV", "mkv");
+    container->addItem("WebM", "webm");
+    container->addItem("Ogg", "ogg");
+    container->addItem("WAV (audio)", "wav");
+    m_tree->setItemWidget(containerItem, 1, container);
+    connect(container, &QComboBox::currentIndexChanged, this, [this, container](int idx) {
+      m_output.container = container->itemData(idx).toString();
+    });
+
+    auto videoItem = new QTreeWidgetItem(output, {"video codec", ""});
+    auto videoCodec = new QComboBox(m_tree);
+    videoCodec->addItem("copy", "copy");
+    videoCodec->addItem("H.264", "libx264");
+    videoCodec->addItem("H.265", "libx265");
+    videoCodec->addItem("AV1", "libsvtav1");
+    m_tree->setItemWidget(videoItem, 1, videoCodec);
+    connect(videoCodec, &QComboBox::currentIndexChanged, this, [this, videoCodec](int idx) {
+      m_output.codecVideo = videoCodec->itemData(idx).toString();
+    });
+
+    auto qualityItem = new QTreeWidgetItem(output, {"video quality (CRF)", ""});
+    auto qualityCrf = new QSpinBox(m_tree);
+    qualityCrf->setRange(0, 64);
+    qualityCrf->setValue(23);
+    m_tree->setItemWidget(qualityItem, 1, qualityCrf);
+    connect(qualityCrf, &QSpinBox::valueChanged, this, [this](int val) {
+      m_output.crf = val;
+    });
+
+    // TODO: bitrate. probably check useCrf flag part of m_output?
+
+    // TODO: noVideo, noAudio flags
+
+    ///
+    auto audioItem = new QTreeWidgetItem(output, {"audio codec", ""});
+    auto audioCodec = new QComboBox(m_tree);
+    audioCodec->addItem("copy", "copy");
+    audioCodec->addItem("aac", "aac");
+    audioCodec->addItem("opus", "libopus");
+    audioCodec->addItem("vorbis", "libvorbis");
+    audioCodec->addItem("mp3", "libmp3lame");
+    audioCodec->addItem("flac", "flac");
+    audioCodec->addItem("pcm 16-bit", "pcm_s16le");
+    m_tree->setItemWidget(audioItem, 1, audioCodec);
+    connect(audioCodec, &QComboBox::currentIndexChanged, this, [this, audioCodec](int idx) {
+      m_output.codecAudio = audioCodec->itemData(idx).toString();
+    });
+
+    auto aqualityItem = new QTreeWidgetItem(output, {"audio quality (kbps)", ""});
+    auto aqualityRate = new QSpinBox(m_tree);
+    aqualityRate->setRange(32, 512);
+    aqualityRate->setValue(128);
+    m_tree->setItemWidget(aqualityItem, 1, aqualityRate);
+    connect(aqualityRate, &QSpinBox::valueChanged, this, [this](int val) {
+      m_output.bitrateAudio = val;
+    });
+
   }
 };

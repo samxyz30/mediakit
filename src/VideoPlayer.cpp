@@ -168,8 +168,8 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent, MkJobQueue* q) : QWidget(parent) {
 
   auto controls = new QHBoxLayout;
   controls->addWidget(m_btnPlay);
-  controls->addWidget(m_sldSeek, 1);
   controls->addWidget(m_lblTime);
+  controls->addWidget(m_sldSeek, 1);
 
 
   auto lblTrim = new QLabel("");

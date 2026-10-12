@@ -60,6 +60,11 @@ MkMainWindow::MkMainWindow() {
     vidPlayer->exportTrim();
   });
 
+  auto transcodeAct = fileTb->addAction("transcode");
+  connect(transcodeAct, &QAction::triggered, this, [this, props, queue]() {
+    props->exportTranscode(queue);
+  });
+
   auto aboutAct = fileTb->addAction("about");
   connect(aboutAct, &QAction::triggered, this, [this]() {
     // TODO: make this nicer, add in version tracking
