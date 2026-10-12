@@ -24,10 +24,10 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.11.*'
+        version: '6.10.0'
+        arch: 'win64_msvc2022_64'
         host: 'windows'
         target: 'desktop'
-        arch: 'win64_msvc2019_64'
         modules: qtmultimedia
         cache: true
 
@@ -40,15 +40,12 @@ jobs:
       run: cmake --build build --config ${{env.BUILD_TYPE}}
 
     - name: Install
-      run: cmake --install build --config ${{env.BUILD_TYPE}} --prefix dist
+      run: cmake --install build --config ${{env.BUILD_TYPE}} --prefix "${{github.workspace}}/dist"
 
-    - name: Package zip
-      run: 7z a -tzip mediakit-windows-x64.zip ./dist/*
-    
 
     - name: Upload zip
       uses: actions/upload-artifact@v4
       with:
         name: mediakit-windows-x64
-        path: mediakit-windows-x64.zip
+        path: dist/
         if-no-files-found: error
