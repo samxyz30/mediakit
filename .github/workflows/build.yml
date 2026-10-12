@@ -56,9 +56,13 @@ jobs:
       run: python scripts/ci-get-ffmpeg.py
     
 
-    - name: Upload zip
-      uses: actions/upload-artifact@v4
+    - name: Compress as 7z
+      run: 7z a -t7z mediakit-${{matrix.name}}.7z ./dist/*
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v7
       with:
         name: mediakit-${{matrix.name}}
-        path: dist/
+        path: mediakit-${{matrix.name}}.7z
         if-no-files-found: error
+        archive: false
