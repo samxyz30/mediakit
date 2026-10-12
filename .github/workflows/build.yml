@@ -12,11 +12,21 @@ env:
 
 jobs:
   build:
-    # TODO: matrix
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-latest
+            qt_arch: win64_msvc2022_64
+            qt_host: windows
+          - name: linux-x64
+            os: ubuntu-26.04
+            qt_arch: linux_gcc_64
+            qt_host: linux
+
+    name: build ${{matrix.name}}
+    runs-on: ${{matrix.os}}
 
     steps:
     - uses: actions/checkout@v4
@@ -25,8 +35,8 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.10.0'
-        arch: 'win64_msvc2022_64'
-        host: 'windows'
+        arch: ${{matrix.qt_arch}}
+        host: ${{matrix.qt_host}}
         target: 'desktop'
         modules: qtmultimedia
         cache: true
@@ -39,13 +49,16 @@ jobs:
     - name: Build
       run: cmake --build build --config ${{env.BUILD_TYPE}}
 
-    - name: Install
+    - name: Package
       run: cmake --install build --config ${{env.BUILD_TYPE}} --prefix "${{github.workspace}}/dist"
 
+    - name: Package vendor
+      run: python scripts/ci-get-ffmpeg.py
+    
 
     - name: Upload zip
       uses: actions/upload-artifact@v4
       with:
-        name: mediakit-windows-x64
+        name: mediakit-${{matrix.name}}
         path: dist/
         if-no-files-found: error
