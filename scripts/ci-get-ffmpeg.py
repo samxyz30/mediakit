@@ -16,7 +16,7 @@ def main():
     is_ext = "tar.xz"
 
 
-  output = Path("./dist/tools/")
+  output = Path("./dist/bin/tools/")
   output.mkdir(parents=True, exist_ok=True)
 
   archive_real = ARCHIVE_NAME.format(os=is_os, ext=is_ext)
