@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QProcess>
 #include <QDateTime>
+#include "common.h"
 
 class MkJobFFmpeg : public QObject {
   Q_OBJECT
@@ -18,7 +19,7 @@ public:
     QString name;
     QString infile;
     QString outfile;
-    QString exec = "ffmpeg";
+    QString exec = MkCommon::findTool("ffmpeg");
     QStringList args;
     // assumed duration, used to calculate progress
     qint64 assumedLengthMs = 0;

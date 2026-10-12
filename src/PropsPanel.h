@@ -73,8 +73,8 @@ public:
       stat->child(0)->setText(1, "could not run ffprobe: " + process->errorString());
     });
 
-    // TODO: unhardcode ffprobe and ffmpeg! define some mechanism in MkCommon
-    process->start("ffprobe", {
+    const auto ffprobe = MkCommon::findTool("ffprobe");
+    process->start(ffprobe, {
       "-v", "error",
       "-show_format", "-show_streams",
       "-of", "json",
@@ -96,7 +96,7 @@ private:
       if (val.isDouble()) return QString::number(val.toDouble(), 'g', 10);
       return {};
     };
-    
+
 
     const QJsonObject format = root.value("format").toObject();
     

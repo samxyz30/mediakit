@@ -16,6 +16,7 @@
 #include <QFileDialog>
 #include <QPainter>
 #include <QShortcut>
+#include <QMouseEvent>
 
 #include "JobQueue.h"
 #include "common.h"
@@ -287,7 +288,7 @@ void MkVideoPlayer::exportTrim() {
   spec.name = QFileInfo(outFile).fileName();
   spec.infile = m_currentPath;
   spec.outfile = outFile;
-  spec.exec = "ffmpeg";
+  spec.exec = MkCommon::findTool("ffmpeg");
   spec.assumedLengthMs = duration;
   spec.args = {
     "-hide_banner", "-n",

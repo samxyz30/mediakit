@@ -4,6 +4,8 @@
 #include <QToolBar>
 #include <QFileDialog>
 #include <QStatusBar>
+#include <QMessageBox>
+#include "common.h"
 #include "MainWindow.h"
 #include "VideoPlayer.h"
 
@@ -57,6 +59,14 @@ MkMainWindow::MkMainWindow() {
   connect(trimAct, &QAction::triggered, this, [this]() {
     vidPlayer->exportTrim();
   });
+
+  auto aboutAct = fileTb->addAction("about");
+  connect(aboutAct, &QAction::triggered, this, [this]() {
+    // TODO: make this nicer, add in version tracking
+    auto aboutinfo = QString("mediakit\nQt %1\nffmpeg path %2\n").arg(qVersion()).arg(MkCommon::findTool("ffmpeg"));
+    QMessageBox::information(this, "about", aboutinfo);
+  });
+
 
   statusBar()->showMessage("ready");
 }

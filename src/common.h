@@ -1,6 +1,10 @@
 #pragma once
 #include <QString>
 #include <QStringList>
+#include <QCoreApplication>
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QDir>
 
 namespace MkCommon {
 
@@ -28,5 +32,27 @@ static QString fmtSize(qint64 bytes) {
   if (unit == 0) return QString("%1 B").arg(bytes);
   return QString("%1 %2").arg(size, 0, 'f', 2).arg(UNITS[unit]);
 };
+
+
+static QDir appdir() {
+  return QDir(QCoreApplication::applicationDirPath());
+}
+
+static QString findTool(const QString& name) {
+#ifdef _WIN32
+  const QString exe = name+".exe";
+#else
+  const QString exe = name;
+#endif
+
+  // prefer bundled exe
+  const QString bundled = appdir().filePath("tools/"+exe);
+  if (QFileInfo::exists(bundled) && QFileInfo(bundled).isFile()) {
+    return QDir::cleanPath(bundled);
+  }
+
+  // if all fails, check PATH
+  return QStandardPaths::findExecutable(exe);
+}
 
 }
