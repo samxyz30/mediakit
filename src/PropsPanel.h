@@ -8,6 +8,7 @@
 #include <QSpinBox>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QCheckBox>
 
 #include <QProcess>
 #include <QJsonDocument>
@@ -132,6 +133,7 @@ public:
       "-i", m_currentPath,
     };
 
+
     if (m_output.noVideo) {
       spec.args.push_back("-vn");
     } else {
@@ -203,6 +205,14 @@ private:
       m_output.container = container->itemData(idx).toString();
     });
 
+
+    auto noVideoItem = new QTreeWidgetItem(output, {"no video", ""});
+    auto noVideo = new QCheckBox(m_tree);
+    m_tree->setItemWidget(noVideoItem, 1, noVideo);
+    connect(noVideo, &QCheckBox::toggled, this, [this, noVideo](bool on) {
+      m_output.noVideo = on;
+    });
+
     auto videoItem = new QTreeWidgetItem(output, {"video codec", ""});
     auto videoCodec = new QComboBox(m_tree);
     videoCodec->addItem("copy", "copy");
@@ -225,9 +235,14 @@ private:
 
     // TODO: bitrate. probably check useCrf flag part of m_output?
 
-    // TODO: noVideo, noAudio flags
-
     ///
+    auto noAudioItem = new QTreeWidgetItem(output, {"no audio", ""});
+    auto noAudio = new QCheckBox(m_tree);
+    m_tree->setItemWidget(noAudioItem, 1, noAudio);
+    connect(noAudio, &QCheckBox::toggled, this, [this, noAudio](bool on) {
+      m_output.noAudio = on;
+    });
+
     auto audioItem = new QTreeWidgetItem(output, {"audio codec", ""});
     auto audioCodec = new QComboBox(m_tree);
     audioCodec->addItem("copy", "copy");
