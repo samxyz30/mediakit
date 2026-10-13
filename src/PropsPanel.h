@@ -20,13 +20,13 @@
 
 struct MkOutputSettings {
   QString container = "mp4";
-  QString codecVideo = "libx264";
+  bool noVideo = false;
+  QString codecVideo = "copy";
   bool useCrf = true;
   int crf = 23;
   int bitrate = 0;
-  bool noVideo = false;
   bool noAudio = false;
-  QString codecAudio = "aac";
+  QString codecAudio = "copy";
   int bitrateAudio = 128;
 };
 
@@ -107,20 +107,49 @@ public:
       return;
     }
 
-    // do NOT use m_currentPath, figure something nicer out
+    // TODO: maybe figure something else out for the path.
+    QFileInfo info(m_currentPath);
+    //const QString defaultName = info.completeBaseName() + "_encode." + info.completeSuffix();
+    const QString defaultName = info.completeBaseName() + "_encode." + m_output.container;
     const QString outFile = QFileDialog::getSaveFileName(
       this,
-      "export transcode", m_currentPath,
+      "export transcoded file", info.absolutePath() + "/" + defaultName,
       "All files (*)"
     );
     if (outFile.isEmpty()) return;
 
-    QMessageBox::critical(this, "TODO", "TODO");
-    return;
 
-    // TODO: construct command from m_output
     MkJobFFmpeg::Spec spec;
     spec.name = QFileInfo(outFile).fileName();
+    spec.infile = m_currentPath;
+    spec.outfile = outFile;
+    spec.exec = MkCommon::findTool("ffmpeg");
+    // TODO: get current video duration in ms, we already obtained it, need to store somwhere
+    spec.assumedLengthMs = m_currentDuration;
+    spec.args = {
+      "-hide_banner", "-n",
+      "-progress", "pipe:1",
+      "-i", m_currentPath,
+    };
+
+    if (m_output.noVideo) {
+      spec.args.push_back("-vn");
+    } else {
+      spec.args.append({"-c:v", m_output.codecVideo});
+      if (m_output.codecVideo != "copy")
+        spec.args.append({"-crf", QString::number(m_output.crf)});
+    }
+
+    if (m_output.noAudio) {
+      spec.args.push_back("-an");
+    } else {
+      spec.args.append({"-c:a", m_output.codecAudio});
+      if (m_output.codecAudio != "copy" && !m_output.codecAudio.startsWith("pcm_"))
+        spec.args.append({"-b:a", QString("%1k").arg(m_output.bitrateAudio)});
+    }
+
+    spec.args.push_back(outFile);
+
     queue->enqueue(spec);
   }
 
@@ -129,6 +158,7 @@ private:
   QString m_currentPath;
   QLabel* m_title;
   QTreeWidget* m_tree;
+  qint64 m_currentDuration = 0;
   MkOutputSettings m_output;
 
 
@@ -150,8 +180,8 @@ private:
       auto sect = new QTreeWidgetItem(m_tree, {"format", ""});
       sect->setExpanded(true);
 
-      auto timestr = MkCommon::fmtTime(valueof(format, "duration").toDouble() * 1000.0);
-      new QTreeWidgetItem(sect, {"duration", timestr});
+      m_currentDuration = valueof(format, "duration").toDouble() * 1000.0;
+      new QTreeWidgetItem(sect, {"duration", MkCommon::fmtTime(m_currentDuration)});
       new QTreeWidgetItem(sect, {"container", valueof(format, "format_long_name")});
       new QTreeWidgetItem(sect, {"bitrate", QString("%1 kbps").arg(valueof(format, "bit_rate").toLongLong() / 1000)});
     }
@@ -166,6 +196,7 @@ private:
     container->addItem("MKV", "mkv");
     container->addItem("WebM", "webm");
     container->addItem("Ogg", "ogg");
+    container->addItem("MP3 (audio)", "mp3");
     container->addItem("WAV (audio)", "wav");
     m_tree->setItemWidget(containerItem, 1, container);
     connect(container, &QComboBox::currentIndexChanged, this, [this, container](int idx) {

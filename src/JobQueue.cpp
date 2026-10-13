@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QLayout>
 #include <QSplitter>
+#include <QScrollBar>
 
 static QString statusToText(MkJobFFmpeg::Status status) {
   using Status = MkJobFFmpeg::Status;
@@ -144,5 +145,6 @@ void MkJobQueue::showSelected(int row) {
   m_status->setText(statusToText(m_selected->status()));
   m_progress->setValue(m_selected->progress());
   m_details->setPlainText(m_selected->logs().join('\n'));
+  m_details->verticalScrollBar()->setValue(m_details->verticalScrollBar()->maximum());
 }
 
