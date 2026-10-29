@@ -127,7 +127,7 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
   spec.exec = MkCommon::findTool("ffmpeg");
   spec.assumedLengthMs = duration_sec * 1000.0;
   spec.args = {
-    "-hide_banner",
+    "-hide_banner", "-y",
     "-progress", "pipe:1",
     "-i", m_currentPath,
   };

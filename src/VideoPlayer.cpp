@@ -310,7 +310,7 @@ void MkVideoPlayer::exportTrim(MkJobQueue* queue) {
   spec.exec = MkCommon::findTool("ffmpeg");
   spec.assumedLengthMs = duration;
   spec.args = {
-    "-hide_banner",
+    "-hide_banner", "-y",
     "-progress", "pipe:1",
     "-nostats",
     "-i", m_currentPath,
