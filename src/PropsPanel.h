@@ -21,17 +21,31 @@
 #include "VideoPlayer.h"
 
 
+// HERE: for doubles, -1.0 means same as source
+//       for ints, -1 means same as source.
+struct MkOutputVideoSettings {
+  bool enabled = true;
+  QString codec = "copy";
+  bool useCrfRate = true;
+  int crf = 23;
+  int bitrate = 5000;
+  double fps = -1.0;
+  // TODO: resolution and scaling
+};
+struct MkOutputAudioSettings {
+  bool enabled = true;
+  QString codec = "copy";
+  int bitrate = 128;
+  int sampleRate = -1;
+  // TODO: gain, mixdown
+};
+
 struct MkOutputSettings {
   QString container = "mp4";
-  bool noVideo = false;
-  QString codecVideo = "copy";
-  bool useCrf = true;
-  int crf = 23;
-  int bitrate = 0;
-  bool noAudio = false;
-  QString codecAudio = "copy";
-  int bitrateAudio = 128;
+  MkOutputVideoSettings video;
+  MkOutputAudioSettings audio;
 };
+
 
 class MkPropsPanel : public QWidget {
   Q_OBJECT
@@ -105,7 +119,6 @@ public:
   }
 
 
-
   void exportTranscode(MkJobQueue* queue, const MkVideoTrimRange trimRange) {
     if (m_currentPath.isEmpty()) {
       QMessageBox::warning(this, "export", "no file selected");
@@ -124,13 +137,13 @@ public:
     if (outFile.isEmpty()) return;
 
 
+    const auto duration_sec = trimRange.end - trimRange.start;
     MkJobFFmpeg::Spec spec;
     spec.name = QFileInfo(outFile).fileName();
     spec.infile = m_currentPath;
     spec.outfile = outFile;
     spec.exec = MkCommon::findTool("ffmpeg");
-    // TODO: get current video duration in ms, we already obtained it, need to store somwhere
-    spec.assumedLengthMs = m_currentDuration;
+    spec.assumedLengthMs = duration_sec * 1000.0;
     spec.args = {
       "-hide_banner",
       "-progress", "pipe:1",
@@ -142,35 +155,53 @@ public:
     if (trimRange.start > 0.0) {
       spec.args.append({"-ss", QString::number(trimRange.start, 'f', 3)});
     }
-    const auto duration = trimRange.end - trimRange.start;
-    spec.args.append({"-t", QString::number(duration, 'f', 3)});
+    spec.args.append({"-t", QString::number(duration_sec, 'f', 3)});
+
 
     // encoder output options
-    if (m_output.noVideo) {
+    if (!m_output.video.enabled) {
       spec.args.push_back("-vn");
     } else {
-      spec.args.append({"-c:v", m_output.codecVideo});
-      if (m_output.codecVideo != "copy")
-        spec.args.append({"-crf", QString::number(m_output.crf)});
+      const auto& v = m_output.video;
+      spec.args.append({"-c:v", v.codec});
+      if (v.codec != "copy") {
+        if (v.useCrfRate) {
+          spec.args.append({"-crf", QString::number(v.crf)});
+        } else {
+          spec.args.append({"-b:v", QString("%1k").arg(v.bitrate)});
+        }
+
+        // TODO: -r is kind of problematic with audio streams. -vf fps= is generally a better choice.
+        //      so try using that later?
+        if (v.fps > 0.0) {
+          spec.args.append({"-r", QString::number(v.fps, 'g', 8)});
+        }
+      }
     }
 
-    if (m_output.noAudio) {
+    if (!m_output.audio.enabled) {
       spec.args.push_back("-an");
     } else {
-      spec.args.append({"-c:a", m_output.codecAudio});
-      if (m_output.codecAudio != "copy" && !m_output.codecAudio.startsWith("pcm_"))
-        spec.args.append({"-b:a", QString("%1k").arg(m_output.bitrateAudio)});
+      const auto& a = m_output.audio;
+      spec.args.append({"-c:a", a.codec});
+      if (a.codec != "copy") {
+        if (!a.codec.startsWith("pcm_")) {
+          spec.args.append({"-b:a", QString("%1k").arg(a.bitrate)});
+        }
+        if (a.sampleRate > 0) {
+          spec.args.append({"-ar", QString::number(a.sampleRate)});
+        }
+      }
     }
 
     spec.args.push_back(outFile);
-
     queue->enqueue(spec);
   }
 
 
+
 private:
   QString m_currentPath;
-  qint64 m_currentDuration = 0;
   QLabel* m_title;
   QTreeWidget* m_tree;
   MkOutputSettings m_output;
@@ -194,8 +225,8 @@ private:
       auto sect = new QTreeWidgetItem(m_tree, {"format", ""});
       sect->setExpanded(true);
 
-      m_currentDuration = valueof(format, "duration").toDouble() * 1000.0;
-      new QTreeWidgetItem(sect, {"duration", MkCommon::fmtTime(m_currentDuration)});
+      auto currentDuration = valueof(format, "duration").toDouble() * 1000.0;
+      new QTreeWidgetItem(sect, {"duration", MkCommon::fmtTime(currentDuration)});
       new QTreeWidgetItem(sect, {"container", valueof(format, "format_long_name")});
       new QTreeWidgetItem(sect, {"bitrate", QString("%1 kbps").arg(valueof(format, "bit_rate").toLongLong() / 1000)});
     }
@@ -220,108 +251,157 @@ private:
         };
 
 
+        
+        if (s_type == "video") {
+          tryField("width", "width");
+          tryField("height", "height");
+          tryField("display_aspect_ratio", "aspect ratio");
+          tryField("r_frame_rate", "framerate");
+          tryField("avg_frame_rate", "averaged framerate");
+          tryField("pix_fmt", "pixel format");
+          tryField("color_space", "color space");
+        }
+        
+        if (s_type == "audio") {
+          tryField("channel_layout", "channel type");
+          tryField("channels", "channels");
+          tryField("sample_rate", "sample rate");
+          tryField("sample_fmt", "sample format");
+        }
+        
         tryField("codec_long_name", "codec long name");
         tryField("duration", "duration");
         tryField("profile", "profile");
         tryField("bit_rate", "bitrate");
-        
-        // video
-        tryField("width", "width");
-        tryField("height", "height");
-        tryField("display_aspect_ratio", "aspect ratio");
-        tryField("r_frame_rate", "framerate");
-        tryField("avg_frame_rate", "averaged framerate");
-        tryField("pix_fmt", "pixel format");
-        tryField("color_space", "color space");
-
         tryField("nb_frames", "number of frames");
-
-        // audio
-        tryField("channel_layout", "channel type");
-        tryField("channels", "channels");
-        tryField("sample_rate", "sample rate");
-        tryField("sample_fmt", "sample format");
       }
     }
 
 
+    auto outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
+    outputItem->setExpanded(true);
 
-    // TODO: clean up. i know this is bad.
-    auto output = new QTreeWidgetItem(m_tree, {"output", ""});
-    output->setExpanded(true);
-    auto containerItem = new QTreeWidgetItem(output, {"container", ""});
-    auto container = new QComboBox(m_tree);
-    container->addItem("MP4", "mp4");
-    container->addItem("MKV", "mkv");
-    container->addItem("WebM", "webm");
-    container->addItem("Ogg", "ogg");
-    container->addItem("MP3 (audio)", "mp3");
-    container->addItem("WAV (audio)", "wav");
-    m_tree->setItemWidget(containerItem, 1, container);
-    connect(container, &QComboBox::currentIndexChanged, this, [this, container](int idx) {
-      m_output.container = container->itemData(idx).toString();
-    });
+    populateOutputWidget(outputItem);
+  }
 
 
-    auto noVideoItem = new QTreeWidgetItem(output, {"no video", ""});
-    auto noVideo = new QCheckBox(m_tree);
-    m_tree->setItemWidget(noVideoItem, 1, noVideo);
-    connect(noVideo, &QCheckBox::toggled, this, [this, noVideo](bool on) {
-      m_output.noVideo = on;
-    });
+  void populateOutputWidget(QTreeWidgetItem* output) {
+    auto addControl = [this](QTreeWidgetItem* parent, const QString& label, QWidget* control) {
+      auto item = new QTreeWidgetItem(parent, {label, ""});
+      m_tree->setItemWidget(item, 1, control);
+      return item;
+    };
 
-    auto videoItem = new QTreeWidgetItem(output, {"video codec", ""});
-    auto videoCodec = new QComboBox(m_tree);
-    videoCodec->addItem("copy", "copy");
-    videoCodec->addItem("H.264", "libx264");
-    videoCodec->addItem("H.265", "libx265");
-    videoCodec->addItem("AV1", "libsvtav1");
-    m_tree->setItemWidget(videoItem, 1, videoCodec);
-    connect(videoCodec, &QComboBox::currentIndexChanged, this, [this, videoCodec](int idx) {
-      m_output.codecVideo = videoCodec->itemData(idx).toString();
-    });
+    auto addCombo = [&]<typename T>(QTreeWidgetItem* parent, const QString& label,
+                        const QList<QPair<QString, QVariant>>& opts, T& setting) {
+      auto combo = new QComboBox(m_tree);
+      for (const auto& [key, prop] : opts) combo->addItem(key, prop);
+      combo->setCurrentIndex(0);
 
-    auto qualityItem = new QTreeWidgetItem(output, {"video quality (CRF)", ""});
-    auto qualityCrf = new QSpinBox(m_tree);
-    qualityCrf->setRange(0, 64);
-    qualityCrf->setValue(23);
-    m_tree->setItemWidget(qualityItem, 1, qualityCrf);
-    connect(qualityCrf, &QSpinBox::valueChanged, this, [this](int val) {
-      m_output.crf = val;
-    });
+      auto* tgt = &setting;
+      connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [tgt, combo](int idx) {
+        *tgt = combo->itemData(idx).value<T>();
+      });
+      
+      addControl(parent, label, combo);
+      return combo;
+    };
 
-    // TODO: bitrate. probably check useCrf flag part of m_output?
 
-    ///
-    auto noAudioItem = new QTreeWidgetItem(output, {"no audio", ""});
-    auto noAudio = new QCheckBox(m_tree);
-    m_tree->setItemWidget(noAudioItem, 1, noAudio);
-    connect(noAudio, &QCheckBox::toggled, this, [this, noAudio](bool on) {
-      m_output.noAudio = on;
-    });
+    auto addCheck = [&](QTreeWidgetItem* parent, const QString& label, bool& setting) {
+      auto check = new QCheckBox(m_tree);
+      check->setChecked(setting);
+      auto* tgt = &setting;
+      connect(check, &QCheckBox::toggled, this, [tgt](bool on) { *tgt = on; });
+      
+      addControl(parent, label, check);
+      return check;
+    };
 
-    auto audioItem = new QTreeWidgetItem(output, {"audio codec", ""});
-    auto audioCodec = new QComboBox(m_tree);
-    audioCodec->addItem("copy", "copy");
-    audioCodec->addItem("aac", "aac");
-    audioCodec->addItem("opus", "libopus");
-    audioCodec->addItem("vorbis", "libvorbis");
-    audioCodec->addItem("mp3", "libmp3lame");
-    audioCodec->addItem("flac", "flac");
-    audioCodec->addItem("pcm 16-bit", "pcm_s16le");
-    m_tree->setItemWidget(audioItem, 1, audioCodec);
-    connect(audioCodec, &QComboBox::currentIndexChanged, this, [this, audioCodec](int idx) {
-      m_output.codecAudio = audioCodec->itemData(idx).toString();
-    });
+    auto addSpin = [&](QTreeWidgetItem* parent, const QString& label, int min, int max, int& setting) {
+      auto spin = new QSpinBox(m_tree);
+      spin->setRange(min, max);
+      spin->setValue(setting);
+      auto* tgt = &setting;
+      connect(spin, &QSpinBox::valueChanged, this, [tgt](int val) { *tgt = val; });
+      
+      addControl(parent, label, spin);
+      return spin;
+    };
 
-    auto aqualityItem = new QTreeWidgetItem(output, {"audio quality (kbps)", ""});
-    auto aqualityRate = new QSpinBox(m_tree);
-    aqualityRate->setRange(32, 512);
-    aqualityRate->setValue(128);
-    m_tree->setItemWidget(aqualityItem, 1, aqualityRate);
-    connect(aqualityRate, &QSpinBox::valueChanged, this, [this](int val) {
-      m_output.bitrateAudio = val;
-    });
 
+    
+    addCombo(output, "container", {
+      {"MP4", "mp4"},
+      {"MKV", "mkv"},
+      {"WebM", "webm"},
+      {"Ogg", "ogg"},
+      {"Opus/Ogg", "opus"},
+      {"MP3", "mp3"},
+      {"FLAC", "flac"},
+      {"WAV", "wav"},
+    }, m_output.container);
+
+    auto video = new QTreeWidgetItem(output, {"video", ""});
+    video->setExpanded(true);
+    addCheck(video, "enabled", m_output.video.enabled);
+
+    addCombo(video, "codec", {
+      {"copy source", "copy"},
+      {"H.264", "libx264"},
+      {"H.265", "libx265"},
+      {"AV1 SVT", "libsvtav1"},
+    }, m_output.video.codec);
+
+    addCheck(video, "use CRF instead of bitrate", m_output.video.useCrfRate);
+
+    addSpin(video, "CRF quality", 0, 68, m_output.video.crf);
+    addSpin(video, "bitrate", 0, 100000, m_output.video.bitrate);
+
+    // i know this is quite ugly, but whatever.
+    addCombo(video, "fps", {
+      {"copy source", -1.0},
+      {"5",   5.0},
+      {"10",  10.0},
+      {"15",  15.0},
+      {"20",  20.0},
+      {"23.976", 23.976},
+      {"24", 24.0},
+      {"25", 25.0},
+      {"30", 30.0},
+      {"50", 50.0},
+      {"60", 60.0},
+      {"72", 72.0},
+    }, m_output.video.fps);
+
+
+    auto audio = new QTreeWidgetItem(output, {"audio", ""});
+    audio->setExpanded(true);
+    addCheck(audio, "enabled", m_output.audio.enabled);
+
+    addCombo(audio, "codec", {
+      {"copy source", "copy"},
+      {"AAC", "aac"},
+      {"Ogg Opus", "libopus"},
+      {"Ogg Vorbis", "libvorbis"},
+      {"MP3 LAME", "libmp3lame"},
+      {"FLAC", "flac"},
+      {"WAV 16-bit PCM", "pcm_s16le"},
+    }, m_output.audio.codec);
+
+    addSpin(audio, "bitrate", 32, 512, m_output.audio.bitrate);
+
+    addCombo(audio, "sample rate", {
+      {"copy source", -1},
+      {"8000Hz", 8000},
+      {"11025Hz", 11025},
+      {"16000Hz", 16000},
+      {"22050Hz", 22050},
+      {"32000Hz", 32000},
+      {"44100Hz", 44100},
+      {"48000Hz", 48000},
+      {"96000Hz", 96000},
+      {"176400Hz", 176400},
+    }, m_output.audio.sampleRate);
   }
 };
