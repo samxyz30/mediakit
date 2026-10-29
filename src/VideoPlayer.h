@@ -13,14 +13,20 @@ class QProcess;
 class MkJobQueue;
 class TrimSlider;
 
+
+struct MkVideoTrimRange {
+  double start;
+  double end;
+};
+
 class MkVideoPlayer : public QWidget {
 public:
-  MkVideoPlayer(QWidget* parent = nullptr, MkJobQueue* = nullptr);
+  MkVideoPlayer(QWidget* parent = nullptr);
   void loadFile(const QString& path);
-  void exportTrim();
-private:
-  MkJobQueue* m_queue;
+  MkVideoTrimRange getTrimRange();
+  void exportTrim(MkJobQueue*);
 
+private:
   QString m_currentPath = "";
   QMediaPlayer* m_player = nullptr;
   QAudioOutput* m_audioOut = nullptr;

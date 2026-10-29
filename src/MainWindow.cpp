@@ -25,7 +25,7 @@ MkMainWindow::MkMainWindow() {
   auto mediaList = new MkMediaList;
   auto props = new MkPropsPanel;
 
-  vidPlayer = new MkVideoPlayer(this, queue);
+  vidPlayer = new MkVideoPlayer(this);
   setCentralWidget(vidPlayer);
   
   addDockWidget(Qt::BottomDockWidgetArea, makeDock("queue", "queueDock", queue));
@@ -55,16 +55,18 @@ MkMainWindow::MkMainWindow() {
   });
 
 
-  auto trimAct = fileTb->addAction("trim video");
-  connect(trimAct, &QAction::triggered, this, [this]() {
-    vidPlayer->exportTrim();
+  auto trimAct = fileTb->addAction("trim");
+  connect(trimAct, &QAction::triggered, this, [this, queue]() {
+    vidPlayer->exportTrim(queue);
   });
 
   auto transcodeAct = fileTb->addAction("transcode");
-  connect(transcodeAct, &QAction::triggered, this, [this, props, queue]() {
-    props->exportTranscode(queue);
+  connect(transcodeAct, &QAction::triggered, this, [&]() {
+    const auto range = vidPlayer->getTrimRange();
+    props->exportTranscode(queue, range);
   });
 
+  
   auto aboutAct = fileTb->addAction("about");
   connect(aboutAct, &QAction::triggered, this, [this]() {
     // TODO: make this nicer, add in version tracking

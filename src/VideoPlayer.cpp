@@ -154,8 +154,8 @@ private:
 
 
 
-MkVideoPlayer::MkVideoPlayer(QWidget* parent, MkJobQueue* q) : QWidget(parent) {
-  m_queue = q;
+
+MkVideoPlayer::MkVideoPlayer(QWidget* parent) : QWidget(parent) {
   m_player = new QMediaPlayer(this);
   m_audioOut = new QAudioOutput(this);
   m_videoOut = new QVideoWidget(this);
@@ -190,12 +190,24 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent, MkJobQueue* q) : QWidget(parent) {
 
 
   connect(m_btnPlay, &QPushButton::clicked, this, [this]() {
-    (m_player->playbackState() == QMediaPlayer::PlayingState) ? m_player->pause() : m_player->play();
+    if (m_player->playbackState() == QMediaPlayer::PlayingState) {
+      m_player->pause();
+      return;
+    }
+    
+    // restart if outside trim range behavior
+    const auto pos = m_player->position();
+    if (pos < m_sldSeek->start() || pos >= m_sldSeek->end()) {
+      m_player->setPosition(m_sldSeek->start());
+    }
+
+    m_player->play();
   });
 
   connect(m_player, &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState s) {
     m_btnPlay->setText(s == QMediaPlayer::PlayingState ? "pause" : "play");
   });
+
 
   // set slider range
   connect(m_player, &QMediaPlayer::durationChanged, this, [this](qint64 dur) {
@@ -204,18 +216,17 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent, MkJobQueue* q) : QWidget(parent) {
     lblTimeUpdate();
 
     m_sldSeek->setRange(0, dur);
-    //inTrimStart->setMaximum(dur / 1000.0);
-    //inTrimStart->setEnabled(dur > 0);
-    //inTrimStart->setValue(0.0);
-    //inTrimEnd->setMaximum(dur / 1000.0);
-    //inTrimEnd->setEnabled(dur > 0);
-    //inTrimEnd->setValue(dur / 1000.0);
   });
 
   // sync seek with playback
   connect(m_player, &QMediaPlayer::positionChanged, this, [this](qint64 pos) {
-    /*if (!sldSeek->isSliderDown())*/ m_sldSeek->setPosition(pos);
+    m_sldSeek->setPosition(pos);
     lblTimeUpdate();
+
+    // if we go past the end, pause
+    if (pos >= m_sldSeek->end()) {
+      m_player->pause();
+    }
   });
 
   // seek in player
@@ -224,6 +235,7 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent, MkJobQueue* q) : QWidget(parent) {
   });
 
   
+
   // trimmer
   connect(m_sldSeek, &TrimSlider::rangeChanged, this, [this, lblTrim](qint64 start, qint64 end) {
     lblTrim->setText(QString("trim %1 - %2, length %3")
@@ -260,7 +272,13 @@ void MkVideoPlayer::lblTimeUpdate() {
 
 
 
-void MkVideoPlayer::exportTrim() {
+MkVideoTrimRange MkVideoPlayer::getTrimRange() {
+  const double start = m_sldSeek->start() / 1000.0;
+  const double end   = m_sldSeek->end() / 1000.0;
+  return { start, end };
+}
+
+void MkVideoPlayer::exportTrim(MkJobQueue* queue) {
   if (m_currentPath.isEmpty()) {
     QMessageBox::warning(this, "export", "no file selected");
     return;
@@ -274,6 +292,7 @@ void MkVideoPlayer::exportTrim() {
     return;
   }
 
+  // TODO: unhardcode .mp4 and video assumptions
   const QString defaultName = QFileInfo(m_currentPath).completeBaseName() + "_trimmed.mp4";
   const QString outFile = QFileDialog::getSaveFileName(
     this,
@@ -291,18 +310,18 @@ void MkVideoPlayer::exportTrim() {
   spec.exec = MkCommon::findTool("ffmpeg");
   spec.assumedLengthMs = duration;
   spec.args = {
-    "-hide_banner", "-n",
-    "-ss", QString::number(start, 'f', 3),
+    "-hide_banner",
+    "-progress", "pipe:1",
+    "-nostats",
     "-i", m_currentPath,
+    "-ss", QString::number(start, 'f', 3),
     "-t", QString::number(duration, 'f', 3),
     "-map", "0:v?", "-map", "0:a?",
     "-c", "copy",
-    "-progress", "pipe:1",
-    "-nostats",
     outFile
   };
 
-  m_queue->enqueue(spec);
+  queue->enqueue(spec);
 }
 
 

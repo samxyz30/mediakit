@@ -14,9 +14,11 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
+#include <QJsonArray>
 
 #include "common.h"
 #include "JobQueue.h"
+#include "VideoPlayer.h"
 
 
 struct MkOutputSettings {
@@ -43,6 +45,7 @@ public:
     m_tree = new QTreeWidget(this);
     m_tree->setColumnCount(2);
     m_tree->setHeaderLabels({"property", "value"});    
+    m_tree->setAlternatingRowColors(true);
     layout->addWidget(m_tree, 1);
   }
 
@@ -102,7 +105,8 @@ public:
   }
 
 
-  void exportTranscode(MkJobQueue* queue) {
+
+  void exportTranscode(MkJobQueue* queue, const MkVideoTrimRange trimRange) {
     if (m_currentPath.isEmpty()) {
       QMessageBox::warning(this, "export", "no file selected");
       return;
@@ -128,12 +132,20 @@ public:
     // TODO: get current video duration in ms, we already obtained it, need to store somwhere
     spec.assumedLengthMs = m_currentDuration;
     spec.args = {
-      "-hide_banner", "-n",
+      "-hide_banner",
       "-progress", "pipe:1",
       "-i", m_currentPath,
     };
 
 
+    // trim range
+    if (trimRange.start > 0.0) {
+      spec.args.append({"-ss", QString::number(trimRange.start, 'f', 3)});
+    }
+    const auto duration = trimRange.end - trimRange.start;
+    spec.args.append({"-t", QString::number(duration, 'f', 3)});
+
+    // encoder output options
     if (m_output.noVideo) {
       spec.args.push_back("-vn");
     } else {
@@ -158,9 +170,9 @@ public:
 
 private:
   QString m_currentPath;
+  qint64 m_currentDuration = 0;
   QLabel* m_title;
   QTreeWidget* m_tree;
-  qint64 m_currentDuration = 0;
   MkOutputSettings m_output;
 
 
@@ -187,6 +199,51 @@ private:
       new QTreeWidgetItem(sect, {"container", valueof(format, "format_long_name")});
       new QTreeWidgetItem(sect, {"bitrate", QString("%1 kbps").arg(valueof(format, "bit_rate").toLongLong() / 1000)});
     }
+
+    const QJsonArray streams = root.value("streams").toArray();
+    if (!streams.isEmpty()) {
+      auto sect = new QTreeWidgetItem(m_tree, {"streams", ""});
+      sect->setExpanded(true);
+
+      for (const auto& streamV : streams) {
+        const auto stream = streamV.toObject();
+        const int idx = stream.value("index").toInt(-1);
+        const auto s_type = valueof(stream, "codec_type");
+        const auto s_codec = valueof(stream, "codec_name");
+
+        auto lbl = QString("#%1 %2 (%3)").arg(idx).arg(s_type).arg(s_codec);
+        auto s_item = new QTreeWidgetItem(sect, {lbl, ""});
+
+        const auto tryField = [&](const QString& key, const QString& prettyName) {
+          const QString val = valueof(stream, key);
+          if (!val.isEmpty()) new QTreeWidgetItem(s_item, {prettyName, val});
+        };
+
+
+        tryField("codec_long_name", "codec long name");
+        tryField("duration", "duration");
+        tryField("profile", "profile");
+        tryField("bit_rate", "bitrate");
+        
+        // video
+        tryField("width", "width");
+        tryField("height", "height");
+        tryField("display_aspect_ratio", "aspect ratio");
+        tryField("r_frame_rate", "framerate");
+        tryField("avg_frame_rate", "averaged framerate");
+        tryField("pix_fmt", "pixel format");
+        tryField("color_space", "color space");
+
+        tryField("nb_frames", "number of frames");
+
+        // audio
+        tryField("channel_layout", "channel type");
+        tryField("channels", "channels");
+        tryField("sample_rate", "sample rate");
+        tryField("sample_fmt", "sample format");
+      }
+    }
+
 
 
     // TODO: clean up. i know this is bad.
