@@ -1,5 +1,6 @@
 #pragma once
 #include <QWidget>
+#include <QList>
 #include "JobQueue.h"
 #include "VideoPlayer.h"
 
@@ -29,9 +30,31 @@ struct MkOutputSettings {
 };
 
 
+// presets
+struct MkOutputPreset {
+  QString name;
+  MkOutputSettings settings;
+};
+
+const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
+  {"Copy streams", MkOutputSettings{
+    "mp4",
+    MkOutputVideoSettings{true, "copy", true, 1, 1, -1.0},
+    MkOutputAudioSettings{true, "copy", 128, -1},
+  }},
+  {"H.264 Small File", MkOutputSettings{
+    "mp4",
+    MkOutputVideoSettings{true, "libx264", true, 26, 2500, -1.0},
+    MkOutputAudioSettings{true, "aac", 128, 48000},
+  }},
+};
+
+
+
 class QTreeWidget;
 class QTreeWidgetItem;
 class QJsonObject;
+class QComboBox;
 
 class MkPropsPanel : public QWidget {
   Q_OBJECT
@@ -42,9 +65,11 @@ public:
 
 private:
   QString m_currentPath;
+  MkOutputSettings m_output;
   QLabel* m_title;
   QTreeWidget* m_tree;
-  MkOutputSettings m_output;
+  QComboBox* m_preset;
+  QTreeWidgetItem* m_outputItem;
 
   void populateData(const QJsonObject& root);
   void populateOutputWidget(QTreeWidgetItem* output);

@@ -26,6 +26,18 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
   m_title->setWordWrap(true);
   layout->addWidget(m_title);
 
+  m_preset = new QComboBox;
+  for (const auto& preset : MK_BUILTIN_PRESETS) m_preset->addItem(preset.name);
+  layout->addWidget(m_preset);
+
+  connect(m_preset, &QComboBox::currentIndexChanged, this, [this](int idx) {
+    if (idx >= MK_BUILTIN_PRESETS.size()) return;
+    m_output = MK_BUILTIN_PRESETS[idx].settings;
+    m_outputItem->takeChildren();
+    populateOutputWidget(m_outputItem);
+  });
+
+
   m_tree = new QTreeWidget(this);
   m_tree->setColumnCount(2);
   m_tree->setHeaderLabels({"property", "value"});    
@@ -242,10 +254,9 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
   }
 
 
-  auto outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
-  outputItem->setExpanded(true);
-
-  populateOutputWidget(outputItem);
+  m_outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
+  m_outputItem->setExpanded(true);
+  populateOutputWidget(m_outputItem);
 }
 
 
@@ -260,7 +271,7 @@ void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
                       const QList<QPair<QString, QVariant>>& opts, T& setting) {
     auto combo = new QComboBox(m_tree);
     for (const auto& [key, prop] : opts) combo->addItem(key, prop);
-    combo->setCurrentIndex(0);
+    combo->setCurrentIndex(combo->findData(QVariant::fromValue(setting)));
 
     auto* tgt = &setting;
     connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [tgt, combo](int idx) {

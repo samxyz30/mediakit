@@ -5,7 +5,7 @@ project(mediakit C CXX)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)  # LTO on release
 
 # --- c/c++ setup
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message(NOTICE "[${PROJECT_NAME}] building for target '${CMAKE_BUILD_TYPE}'")
