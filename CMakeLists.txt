@@ -20,7 +20,6 @@ qt_standard_project_setup()
 message(NOTICE "[${PROJECT_NAME}] QT: ${Qt6_VERSION}")
 
 
-
 # --- app sources
 file(GLOB_RECURSE APP_SRCS CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
@@ -28,6 +27,12 @@ qt_add_executable(mediakit ${APP_SRCS})
 target_link_libraries(mediakit PRIVATE
   Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets
 )
+
+# for win32 Release builds as GUI app to get rid of console window
+if(WIN32)
+  set_target_properties(mediakit PROPERTIES WIN32_EXECUTABLE $<CONFIG:Release>)
+endif()
+
 
 
 # --- installation
