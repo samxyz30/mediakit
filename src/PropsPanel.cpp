@@ -31,7 +31,7 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
   layout->addWidget(m_preset);
 
   connect(m_preset, &QComboBox::currentIndexChanged, this, [this](int idx) {
-    if (idx >= MK_BUILTIN_PRESETS.size()) return;
+    if (m_outputItem == nullptr || idx >= MK_BUILTIN_PRESETS.size()) return;
     m_output = MK_BUILTIN_PRESETS[idx].settings;
     m_outputItem->takeChildren();
     populateOutputWidget(m_outputItem);

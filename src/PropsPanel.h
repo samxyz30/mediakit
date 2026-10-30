@@ -66,10 +66,10 @@ public:
 private:
   QString m_currentPath;
   MkOutputSettings m_output;
-  QLabel* m_title;
-  QTreeWidget* m_tree;
-  QComboBox* m_preset;
-  QTreeWidgetItem* m_outputItem;
+  QLabel* m_title = nullptr;
+  QTreeWidget* m_tree = nullptr;
+  QComboBox* m_preset = nullptr;
+  QTreeWidgetItem* m_outputItem = nullptr;
 
   void populateData(const QJsonObject& root);
   void populateOutputWidget(QTreeWidgetItem* output);

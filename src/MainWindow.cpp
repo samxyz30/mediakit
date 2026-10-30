@@ -12,6 +12,7 @@
 #include "JobQueue.h"
 #include "MediaList.h"
 #include "PropsPanel.h"
+#include "SettingsWindow.h"
 
 
 MkMainWindow::MkMainWindow() {
@@ -66,12 +67,11 @@ MkMainWindow::MkMainWindow() {
     props->exportTranscode(queue, range);
   });
 
-  
-  auto aboutAct = fileTb->addAction("about");
-  connect(aboutAct, &QAction::triggered, this, [this]() {
-    // TODO: make this nicer, add in version tracking
-    auto aboutinfo = QString("mediakit\nQt %1\nffmpeg path %2\n").arg(qVersion()).arg(MkCommon::findTool("ffmpeg"));
-    QMessageBox::information(this, "about", aboutinfo);
+
+  auto settingsAct = fileTb->addAction("settings");
+  connect(settingsAct, &QAction::triggered, this, [this]() {
+    SettingsWindow cfg(this);
+    cfg.exec();
   });
 
 
