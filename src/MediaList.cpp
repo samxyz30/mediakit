@@ -48,10 +48,12 @@ void MkMediaList::addFiles(const QStringList& paths) {
   }
 
   // pick the first item automatically
-  if (count() > 0) {
-    setCurrentRow(0);
-    itemSelected(currentItem());
-  }
+  // this is commented out for now, i just don't really like this behavior.
+  // TODO. i still have to decide if this is good or not
+  //if (count() > 0) {
+  //  setCurrentRow(0);
+  //  itemSelected(currentItem());
+  //}
 }
 
 
