@@ -42,10 +42,49 @@ const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
     MkOutputVideoSettings{true, "copy", true, 1, 1, -1.0},
     MkOutputAudioSettings{true, "copy", 128, -1},
   }},
+
+  {"H.264 Fast 30fps", MkOutputSettings{
+    "mp4",
+    MkOutputVideoSettings{true, "libx264", true, 25, 0, 30.0},
+    MkOutputAudioSettings{true, "aac", 128, 48000},
+  }},
   {"H.264 Small File", MkOutputSettings{
     "mp4",
     MkOutputVideoSettings{true, "libx264", true, 26, 2500, -1.0},
     MkOutputAudioSettings{true, "aac", 128, 48000},
+  }},
+
+
+  {"Audio: WAV 16-bit", MkOutputSettings{
+    "wav",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "pcm_s16le", 0, -1},
+  }},
+  {"Audio: WAV 16-bit 44100Hz", MkOutputSettings{
+    "wav",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "pcm_s16le", 0, 44100},
+  }},
+  {"Audio: WAV 16-bit 48000Hz", MkOutputSettings{
+    "wav",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "pcm_s16le", 0, 48000},
+  }},
+  {"Audio: FLAC", MkOutputSettings{
+    "flac",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "flac", 0, -1},
+  }},
+
+  {"Audio: Opus 96kbps", MkOutputSettings{
+    "opus",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "libopus", 96, 48000},
+  }},
+  {"Audio: MP3 320kbps", MkOutputSettings{
+    "mp3",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "libmp3lame", 320, 44100},
   }},
 };
 
