@@ -67,7 +67,7 @@ MkMainWindow::MkMainWindow() {
   });
 
   auto transcodeAct = fileTb->addAction("transcode");
-  connect(transcodeAct, &QAction::triggered, this, [&]() {
+  connect(transcodeAct, &QAction::triggered, this, [this, props, queue]() {
     const auto range = vidPlayer->getTrimRange();
     props->exportTranscode(queue, range);
   });
