@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QStatusBar>
 #include <QMessageBox>
+#include <QSettings>
 #include "common.h"
 #include "MainWindow.h"
 #include "VideoPlayer.h"
@@ -16,6 +17,10 @@
 
 
 MkMainWindow::MkMainWindow() {
+  QSettings cfg;
+  QMainWindow::restoreGeometry(cfg.value("geometry").toByteArray());
+  QMainWindow::restoreState(cfg.value("state").toByteArray());
+
   setWindowTitle("mediakit");
   resize(1280, 720);
 
@@ -76,6 +81,13 @@ MkMainWindow::MkMainWindow() {
 
 
   statusBar()->showMessage("ready");
+}
+
+void MkMainWindow::closeEvent(QCloseEvent* evt) {
+  QSettings cfg;
+  cfg.setValue("geometry", saveGeometry());
+  cfg.setValue("state", saveState());
+  QMainWindow::closeEvent(evt);
 }
 
 

@@ -40,8 +40,9 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
 
   m_tree = new QTreeWidget(this);
   m_tree->setColumnCount(2);
-  m_tree->setHeaderLabels({"property", "value"});    
+  m_tree->setHeaderLabels({"property", "value"});
   m_tree->setAlternatingRowColors(true);
+  m_tree->setColumnWidth(0, 200);
   layout->addWidget(m_tree, 1);
 }
 

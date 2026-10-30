@@ -172,6 +172,8 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent) : QWidget(parent) {
   controls->addWidget(m_sldSeek, 1);
 
 
+  // TODO: loop toggle to loop video somewhere here?
+  
   auto lblTrim = new QLabel("");
   auto btnTrimStart = new QPushButton("set start");
   auto btnTrimEnd = new QPushButton("set end");
@@ -256,6 +258,7 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent) : QWidget(parent) {
   // shortcuts
   connect(new QShortcut(QKeySequence(Qt::Key_I), this), &QShortcut::activated, btnTrimStart, &QPushButton::click);
   connect(new QShortcut(QKeySequence(Qt::Key_O), this), &QShortcut::activated, btnTrimEnd, &QPushButton::click);
+  connect(new QShortcut(QKeySequence(Qt::Key_Space), this), &QShortcut::activated, m_btnPlay, &QPushButton::click);
 }
 
 
