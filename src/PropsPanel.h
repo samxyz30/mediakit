@@ -27,6 +27,7 @@ struct MkOutputSettings {
   QString container = "mp4";
   MkOutputVideoSettings video;
   MkOutputAudioSettings audio;
+  QString ffargs = "";
 };
 
 

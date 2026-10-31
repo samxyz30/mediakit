@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QCheckBox>
+#include <QLineEdit>
 
 #include <QProcess>
 #include <QJsonDocument>
@@ -108,7 +109,6 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
     return;
   }
 
-  // TODO: maybe figure something else out for the path.
   QFileInfo info(m_currentPath);
   //const QString defaultName = info.completeBaseName() + "_encode." + info.completeSuffix();
   const QString defaultName = info.completeBaseName() + "_encode." + m_output.container;
@@ -154,11 +154,13 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
         spec.args.append({"-b:v", QString("%1k").arg(v.bitrate)});
       }
 
-      // TODO: -r is kind of problematic with audio streams. -vf fps= is generally a better choice.
-      //      so try using that later?
+      // -r is kind of problematic with audio streams. -vf fps= is generally a better choice.
       if (v.fps > 0.0) {
-        spec.args.append({"-r", QString::number(v.fps, 'g', 8)});
+        spec.args.append({"-vf", QString("fps=%1").arg(v.fps)});
       }
+
+      // TODO: resolution via -vf scale=w:h
+      // TODO: preset settings like ultrafast, veryfast, fast...
     }
   }
 
@@ -176,6 +178,9 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
       }
     }
   }
+
+  // TODO: fix what could happen when there's conflicting arguments and things like that
+  spec.args.append(QProcess::splitCommand(m_output.ffargs));
 
   spec.args.push_back(outFile);
   queue->enqueue(spec);
@@ -329,6 +334,7 @@ void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
     {"AV1 SVT", "libsvtav1"},
   }, m_output.video.codec);
 
+  // TODO: maybe instead let's grey out the spinboxes?? do something more UX friendly
   addCheck(video, "use CRF instead of bitrate", m_output.video.useCrfRate);
 
   addSpin(video, "CRF quality", 0, 68, m_output.video.crf);
@@ -379,4 +385,10 @@ void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
     {"96000Hz", 96000},
     {"176400Hz", 176400},
   }, m_output.audio.sampleRate);
+
+
+  auto ffArgs = new QLineEdit(m_tree);
+  ffArgs->setText(m_output.ffargs);
+  connect(ffArgs, &QLineEdit::textChanged, this, [this](const QString& text) { m_output.ffargs = text; });
+  addControl(output, "advanced args", ffArgs);
 }
