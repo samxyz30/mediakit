@@ -67,7 +67,7 @@ public:
       doFinish(Status::Cancelled);
     } else {
       m_finishCancel = true;
-      m_proc->terminate();
+      m_proc->close();
     }
   }
 
