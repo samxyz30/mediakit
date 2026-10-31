@@ -34,6 +34,7 @@ def main():
         target.write_bytes(zip.read(memb))
 
   else:
+    # this doesn't seem to follow symlinks and instead just duplicates the files. idk how to fix this. TODO
     with tarfile.open(temp, "r:*") as tar:
       members = [n for n in tar.getmembers() if n.isfile() and "/bin/" in n.name or "/lib/" in n.name]
       for memb in members:
