@@ -5,6 +5,7 @@
 
 // implementation of TrimSlider in VideoPlayer.cpp
 
+// TODO: middle click to drag and pan around
 class TrimSlider : public QWidget {
   Q_OBJECT
 public:
@@ -107,6 +108,7 @@ private:
   void paintEvent(QPaintEvent*) override {
     // https://doc.qt.io/qt-6/qtwidgets-painting-basicdrawing-example.html
     QPainter p(this);
+    const QPalette& pal = palette();
 
     const double left = 12;
     const double right = width()-12;
@@ -114,8 +116,9 @@ private:
     const double trackW = right-left;
     const double trackH = 16;
 
+    // background track
     p.setPen(Qt::NoPen);
-    p.setBrush(QColor(0x454545));
+    p.setBrush(QColor(pal.color(QPalette::Midlight)));
     p.drawRect(QRectF(left, trackY - trackH / 2, trackW, trackH));
     
     if (m_duration <= 0) return;
@@ -123,7 +126,8 @@ private:
     const double xEnd = time2x(m_end);
     const double xPlay = time2x(m_position);
 
-    p.setBrush(QColor(0x0d77da));
+    // selected trim track
+    p.setBrush(QColor(pal.color(QPalette::Highlight)));
     p.drawRect(QRectF(xStart, trackY - trackH/2, qMax<double>(0, xEnd-xStart), trackH));
 
     
@@ -132,10 +136,11 @@ private:
       p.drawRect(QRectF(x-4, trackY-15, 8, 30));
     };
 
-    drawHandle(xStart, QColor(0xffffff));
-    drawHandle(xEnd, QColor(0xffffff));
+    drawHandle(xStart, QColor(pal.color(QPalette::Text)));
+    drawHandle(xEnd, QColor(pal.color(QPalette::Text)));
 
-    p.setPen(QPen(Qt::white, 2));
+    // playhead
+    p.setPen(QPen(pal.color(QPalette::BrightText), 2));
     p.drawLine(QPointF(xPlay, trackY-19), QPointF(xPlay, trackY+19));
   }
 
