@@ -20,6 +20,7 @@ struct MkVideoTrimRange {
 };
 
 class MkVideoPlayer : public QWidget {
+  Q_OBJECT
 public:
   MkVideoPlayer(QWidget* parent = nullptr);
   void loadFile(const QString& path);
