@@ -47,13 +47,12 @@ void MkMediaList::addFiles(const QStringList& paths) {
     entry->setToolTip(full);
   }
 
-  // pick the first item automatically
-  // this is commented out for now, i just don't really like this behavior.
-  // TODO. i still have to decide if this is good or not
-  //if (count() > 0) {
-  //  setCurrentRow(0);
-  //  itemSelected(currentItem());
-  //}
+  // pick the last item automatically
+  // TODO: make configurable?
+  if (count() > 0) {
+    setCurrentRow(count()-1);
+    itemSelected(currentItem());
+  }
 }
 
 
