@@ -37,22 +37,27 @@ struct MkOutputPreset {
   MkOutputSettings settings;
 };
 
-const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
-  {"Copy streams", MkOutputSettings{
-    "mp4",
-    MkOutputVideoSettings{true, "copy", true, 1, 1, -1.0},
-    MkOutputAudioSettings{true, "copy", 128, -1},
-  }},
-
+static const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
   {"H.264 Fast 30fps", MkOutputSettings{
     "mp4",
-    MkOutputVideoSettings{true, "libx264", true, 25, 0, 30.0},
+    MkOutputVideoSettings{true, "libx264", true, 24, 0, 30.0},
     MkOutputAudioSettings{true, "aac", 128, 48000},
   }},
   {"H.264 Small File", MkOutputSettings{
     "mp4",
-    MkOutputVideoSettings{true, "libx264", true, 26, 2500, -1.0},
-    MkOutputAudioSettings{true, "aac", 128, 48000},
+    MkOutputVideoSettings{true, "libx264", true, 30, 2500, -1.0},
+    MkOutputAudioSettings{true, "aac", 96, 48000},
+  }},
+  {"AV1 Fast 30fps", MkOutputSettings{
+    "mp4",
+    MkOutputVideoSettings{true, "libsvtav1", true, 36, 0, 30.0},
+    MkOutputAudioSettings{true, "libopus", 96, 48000},
+  }},
+
+  {"Copy streams", MkOutputSettings{
+    "mp4",
+    MkOutputVideoSettings{true, "copy", true, 1, 1, -1.0},
+    MkOutputAudioSettings{true, "copy", 128, -1},
   }},
 
 
@@ -70,6 +75,11 @@ const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
     "wav",
     MkOutputVideoSettings{false},
     MkOutputAudioSettings{true, "pcm_s16le", 0, 48000},
+  }},
+  {"Audio: WAV float", MkOutputSettings{
+    "wav",
+    MkOutputVideoSettings{false},
+    MkOutputAudioSettings{true, "pcm_f32le", 0, -1},
   }},
   {"Audio: FLAC", MkOutputSettings{
     "flac",

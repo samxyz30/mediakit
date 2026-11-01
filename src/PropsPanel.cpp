@@ -260,6 +260,8 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
   }
 
 
+  // set the default (first) preset and load into output widget
+  m_output = MK_BUILTIN_PRESETS[0].settings;
   m_outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
   m_outputItem->setExpanded(true);
   populateOutputWidget(m_outputItem);
@@ -316,6 +318,7 @@ void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
     {"MP4", "mp4"},
     {"MKV", "mkv"},
     {"WebM", "webm"},
+    {"M4A", "m4a"},
     {"Ogg", "ogg"},
     {"Opus/Ogg", "opus"},
     {"MP3", "mp3"},
@@ -369,6 +372,7 @@ void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
     {"MP3 LAME", "libmp3lame"},
     {"FLAC", "flac"},
     {"WAV 16-bit PCM", "pcm_s16le"},
+    {"WAV 32-bit float", "pcm_f32le"},
   }, m_output.audio.codec);
 
   addSpin(audio, "bitrate", 32, 512, m_output.audio.bitrate);
