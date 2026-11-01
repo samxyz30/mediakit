@@ -74,5 +74,5 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release create ci-main --title "main branch build" --notes "latest successful build from the main branch" --target main
+        gh release create ci-main --title "main branch build" --notes "latest successful build from the main branch" --target main || true
         gh release upload ci-main mediakit-${{matrix.name}}.7z --clobber

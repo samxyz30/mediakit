@@ -1,8 +1,9 @@
 # mediakit
 mediakit is a media converter built on top of ffmpeg. it is meant to trim videos, transcode them, transform media (such as audio/video/image) and things of that nature.
 
-the current scope is to be a damn good video trimmer before we get to generic media content. this is because there are no good video trimmers
+the current scope is to be a damn good video trimmer.
 
+![preview image](./docs/preview.png)
 
 ## build
 requires Qt6 widgets and multimedia libraries
@@ -43,4 +44,12 @@ and more things i haven't thought about at the time of writing such as CI, error
 
 
 ## license
-TBD, likely GPLv3.
+GPLv3. read LICENSE for more information.
+
+mediakit Copyright (C) 2026 
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
