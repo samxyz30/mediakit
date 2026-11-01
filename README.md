@@ -1,9 +1,10 @@
 # mediakit
-mediakit is a media converter built on top of ffmpeg. it is meant to trim videos, transcode them, transform media (such as audio/video/image) and things of that nature.
+mediakit is a media converter built on top of ffmpeg. it is meant to trim media, transcode it, transform media (such as audio/video/image) and things of that nature.
 
-the current scope is to be a damn good video trimmer.
+[usage](./docs/USAGE.md) | [releases](https://github.com/samxyz30/mediakit/releases)
 
 ![preview image](./docs/preview.png)
+
 
 ## build
 requires Qt6 widgets and multimedia libraries
@@ -28,7 +29,7 @@ cmake --install build --prefix dist
   - [x] basic video trimming
   - [x] basic job queue/system, calling and parsing ffmpeg outputs
   - [x] better trim timeline
-    - [ ] zoom in/out on the timeline for big videos
+    - [x] (PARTIAL) zoom in/out on the timeline for big videos
   - [x] media list dock, imports and drag and drop
   - [x] properties dock, likely a tree or something of options to change for selected media
   - [x] bundle ffmpeg some way
@@ -40,11 +41,11 @@ cmake --install build --prefix dist
   - [x] choose target bitrate etc...
   - [ ] other tools like extract video to audio, common things like this
 
-and more things i haven't thought about at the time of writing such as CI, error handling, settings, about...
-
+...and many more. just grep for `TODO` in the codebase to find out for yourself.
 
 ## license
 GPLv3. read LICENSE for more information.
+
 
 mediakit Copyright (C) 2026 
 
