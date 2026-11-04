@@ -183,9 +183,9 @@ void MkVideoPlayer::exportTrim(MkJobQueue* queue) {
     "-hide_banner", "-y",
     "-progress", "pipe:1",
     "-nostats",
-    "-i", m_currentPath,
     "-ss", QString::number(start, 'f', 3),
     "-t", QString::number(duration, 'f', 3),
+    "-i", m_currentPath,
     "-map", "0:v?", "-map", "0:a?",
     "-c", "copy",
     outFile

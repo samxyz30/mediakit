@@ -130,7 +130,6 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
   spec.args = {
     "-hide_banner", "-y",
     "-progress", "pipe:1",
-    "-i", m_currentPath,
   };
 
 
@@ -140,6 +139,8 @@ void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange tri
   }
   spec.args.append({"-t", QString::number(duration_sec, 'f', 3)});
 
+  
+  spec.args.append({"-i", m_currentPath});
 
   // encoder output options
   if (!m_output.video.enabled) {
