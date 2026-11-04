@@ -60,6 +60,10 @@ private:
   qint64 m_viewStart = 0;
   qint64 m_viewEnd = 0;
 
+  bool m_panning = false;
+  QPoint m_lastMouse;
+
+
   double time2x(qint64 ms) const {
     const double left = 12;
     const double right = width()-12;
@@ -144,6 +148,7 @@ private:
     p.drawLine(QPointF(xPlay, trackY-19), QPointF(xPlay, trackY+19));
   }
 
+
   //
   void wheelEvent(QWheelEvent* evt) override {
     if (evt->angleDelta().y() > 0)
@@ -155,6 +160,14 @@ private:
   }
 
   void mousePressEvent(QMouseEvent* evt) override {
+    if (evt->button() == Qt::MiddleButton) {
+      m_panning = true;
+      m_lastMouse = evt->pos();
+      setCursor(Qt::ClosedHandCursor);
+      evt->accept();
+      return;
+    }
+
     if (m_duration <= 0) return;
     const double x = evt->position().x();
     const double xStart = time2x(m_start);
@@ -171,6 +184,17 @@ private:
   }
 
   void mouseMoveEvent(QMouseEvent* evt) override {
+    if (m_panning) {
+      int deltaPx = evt->pos().x() - m_lastMouse.x();
+      qint64 dur = m_viewEnd - m_viewStart;
+      qint64 deltaTime = deltaPx * (dur / width());
+      m_viewStart = qBound(0, m_viewStart - deltaTime, m_duration - dur);
+      m_viewEnd   = m_viewStart + dur;
+      m_lastMouse = evt->pos();
+      update();
+      return;
+    }
+
     if (m_drag != Drag::None) {
       const qint64 ms = x2time(evt->position().x());
       if (m_drag == Drag::Start) m_start = qBound(0, ms, m_end);
@@ -183,6 +207,10 @@ private:
   }
 
   void mouseReleaseEvent(QMouseEvent* evt) override {
+    if (m_panning) {
+      unsetCursor();
+      m_panning = false;
+    }
     m_drag = Drag::None;
     evt->accept();
   }
