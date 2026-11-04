@@ -61,7 +61,7 @@ jobs:
 
     - name: Compress as 7z
       run: 7z a -t7z mediakit-${{matrix.name}}.7z ./dist/*
-    
+
     - name: Upload artifact
       uses: actions/upload-artifact@v7
       with:
@@ -76,3 +76,14 @@ jobs:
       run: |
         gh release create ci-main --title "main branch build" --notes "latest successful build from the main branch" --target main || true
         gh release upload ci-main mediakit-${{matrix.name}}.7z --clobber
+
+    
+    - name: Create installer
+      if: startsWith(runner.os, 'windows')
+      run: iscc scripts/setup.iss
+    
+    - name: Upload installer to releases
+      if: startsWith(runner.os, 'windows')
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload ci-main build/setup/mediakit-setup.exe --clobber
