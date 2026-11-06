@@ -99,7 +99,7 @@ MkVideoPlayer::MkVideoPlayer(QWidget* parent) : QWidget(parent) {
   });
 
   // seek in player
-  connect(m_sldSeek, &TrimSlider::sliderMoved, this, [this](qint64 pos) {
+  connect(m_sldSeek, &TrimSlider::playheadMoved, this, [this](qint64 pos) {
     m_player->setPosition(pos);
   });
 

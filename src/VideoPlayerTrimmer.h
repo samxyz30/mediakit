@@ -44,7 +44,7 @@ public:
   qint64 viewEnd() const { return m_viewEnd; }
 
 signals:
-  void sliderMoved(qint64 pos);
+  void playheadMoved(qint64 pos);
   void rangeChanged(qint64 start, qint64 end);
 
 
@@ -179,7 +179,7 @@ private:
       m_drag = Drag::End;
     } else {
       m_drag = Drag::None;
-      emit sliderMoved(x2time(x));
+      emit playheadMoved(x2time(x));
     }
   }
 
@@ -203,6 +203,9 @@ private:
       
       update();
       emit rangeChanged(m_start, m_end);
+    } else if (m_drag == Drag::None) {
+      // we're moving the mouse so we're scrolling
+      emit playheadMoved(x2time(evt->position().x()));
     }
   }
 

@@ -61,15 +61,17 @@ MkMainWindow::MkMainWindow() {
   });
 
 
-  auto trimAct = fileTb->addAction("trim");
-  connect(trimAct, &QAction::triggered, this, [this, queue]() {
-    vidPlayer->exportTrim(queue);
-  });
 
   auto transcodeAct = fileTb->addAction("transcode");
   connect(transcodeAct, &QAction::triggered, this, [this, props, queue]() {
     const auto range = vidPlayer->getTrimRange();
     props->exportTranscode(queue, range);
+  });
+
+  auto trimAct = fileTb->addAction("trim (lossless)");
+  trimAct->setToolTip("trims the video losslessly\n\nthis method is fast, however can cause weird sync glitches and issues in certain encodings.\nif you're unsure, use transcode instead.");
+  connect(trimAct, &QAction::triggered, this, [this, queue]() {
+    vidPlayer->exportTrim(queue);
   });
 
 
