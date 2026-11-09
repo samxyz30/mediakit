@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QTabWidget>
 
 #include <QProcess>
 #include <QJsonDocument>
@@ -39,12 +40,19 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
   });
 
 
+  auto tabs = new QTabWidget(this);
+
   m_tree = new QTreeWidget(this);
   m_tree->setColumnCount(2);
   m_tree->setHeaderLabels({"property", "value"});
   m_tree->setAlternatingRowColors(true);
   m_tree->setColumnWidth(0, 200);
-  layout->addWidget(m_tree, 1);
+  tabs->addTab(m_tree, "properties");
+
+  auto m_outputItem2 = new QLabel("please use the properties tab, this is a WIP.");
+  tabs->addTab(m_outputItem2, "output");
+  
+  layout->addWidget(tabs, 1);
 }
 
 void MkPropsPanel::loadFile(const QString& path) {
@@ -227,6 +235,7 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
 
       auto lbl = QString("#%1 %2 (%3)").arg(idx).arg(s_type).arg(s_codec);
       auto s_item = new QTreeWidgetItem(sect, {lbl, ""});
+      s_item->setExpanded(true);
 
       const auto tryField = [&](const QString& key, const QString& prettyName) {
         const QString val = valueof(stream, key);
@@ -262,6 +271,7 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
 
 
   // set the default (first) preset and load into output widget
+  // TODO: maybe pick the selected one instead. i'm too lazy to do this.
   m_output = MK_BUILTIN_PRESETS[0].settings;
   m_outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
   m_outputItem->setExpanded(true);
