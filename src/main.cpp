@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   app.setOrganizationName("mediakit");
   app.setApplicationName("mediakit");
 
-  SettingsWindow::reloadSettings();
+  MkSettingsWindow::reloadSettings();
 
   MkMainWindow wnd;
   wnd.show();

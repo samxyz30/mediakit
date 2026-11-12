@@ -3,13 +3,11 @@
 #include <QVBoxLayout>
 #include <QFileInfo>
 #include <QTreeWidget>
-#include <QComboBox>
-#include <QSpinBox>
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QCheckBox>
-#include <QLineEdit>
 #include <QTabWidget>
+#include <QScrollArea>
+#include <QComboBox>
 
 #include <QProcess>
 #include <QJsonDocument>
@@ -35,8 +33,7 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
   connect(m_preset, &QComboBox::currentIndexChanged, this, [this](int idx) {
     if (m_outputItem == nullptr || idx >= MK_BUILTIN_PRESETS.size()) return;
     m_output = MK_BUILTIN_PRESETS[idx].settings;
-    m_outputItem->takeChildren();
-    populateOutputWidget(m_outputItem);
+    populateOutputWidget();
   });
 
 
@@ -49,8 +46,13 @@ MkPropsPanel::MkPropsPanel(QWidget* parent) : QWidget(parent) {
   m_tree->setColumnWidth(0, 200);
   tabs->addTab(m_tree, "properties");
 
-  auto m_outputItem2 = new QLabel("please use the properties tab, this is a WIP.");
-  tabs->addTab(m_outputItem2, "output");
+  // this seems to work for now, but the background color did change to be darker. meaning i'm probably doing something wrong.
+  // TODO fix
+  auto wrap = new QScrollArea();
+  wrap->setWidgetResizable(true);
+  m_outputItem = new QWidget();
+  wrap->setWidget(m_outputItem);
+  tabs->addTab(wrap, "output");
   
   layout->addWidget(tabs, 1);
 }
@@ -269,141 +271,6 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
     }
   }
 
-
-  // set the default (first) preset and load into output widget
-  // TODO: maybe pick the selected one instead. i'm too lazy to do this.
-  m_output = MK_BUILTIN_PRESETS[0].settings;
-  m_outputItem = new QTreeWidgetItem(m_tree, {"output", ""});
-  m_outputItem->setExpanded(true);
-  populateOutputWidget(m_outputItem);
-}
-
-
-void MkPropsPanel::populateOutputWidget(QTreeWidgetItem* output) {
-  auto addControl = [this](QTreeWidgetItem* parent, const QString& label, QWidget* control) {
-    auto item = new QTreeWidgetItem(parent, {label, ""});
-    m_tree->setItemWidget(item, 1, control);
-    return item;
-  };
-
-  auto addCombo = [&]<typename T>(QTreeWidgetItem* parent, const QString& label,
-                      const QList<QPair<QString, QVariant>>& opts, T& setting) {
-    auto combo = new QComboBox(m_tree);
-    for (const auto& [key, prop] : opts) combo->addItem(key, prop);
-    combo->setCurrentIndex(combo->findData(QVariant::fromValue(setting)));
-
-    auto* tgt = &setting;
-    connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [tgt, combo](int idx) {
-      *tgt = combo->itemData(idx).value<T>();
-    });
-    
-    addControl(parent, label, combo);
-    return combo;
-  };
-
-
-  auto addCheck = [&](QTreeWidgetItem* parent, const QString& label, bool& setting) {
-    auto check = new QCheckBox(m_tree);
-    check->setChecked(setting);
-    auto* tgt = &setting;
-    connect(check, &QCheckBox::toggled, this, [tgt](bool on) { *tgt = on; });
-    
-    addControl(parent, label, check);
-    return check;
-  };
-
-  auto addSpin = [&](QTreeWidgetItem* parent, const QString& label, int min, int max, int& setting) {
-    auto spin = new QSpinBox(m_tree);
-    spin->setRange(min, max);
-    spin->setValue(setting);
-    auto* tgt = &setting;
-    connect(spin, &QSpinBox::valueChanged, this, [tgt](int val) { *tgt = val; });
-    
-    addControl(parent, label, spin);
-    return spin;
-  };
-
-
-  
-  addCombo(output, "container", {
-    {"MP4", "mp4"},
-    {"MKV", "mkv"},
-    {"WebM", "webm"},
-    {"M4A", "m4a"},
-    {"Ogg", "ogg"},
-    {"Opus/Ogg", "opus"},
-    {"MP3", "mp3"},
-    {"FLAC", "flac"},
-    {"WAV", "wav"},
-  }, m_output.container);
-
-  auto video = new QTreeWidgetItem(output, {"video", ""});
-  video->setExpanded(true);
-  addCheck(video, "enabled", m_output.video.enabled);
-
-  addCombo(video, "codec", {
-    {"copy source", "copy"},
-    {"H.264", "libx264"},
-    {"H.265", "libx265"},
-    {"AV1 SVT", "libsvtav1"},
-  }, m_output.video.codec);
-
-  // TODO: maybe instead let's grey out the spinboxes?? do something more UX friendly
-  addCheck(video, "use CRF instead of bitrate", m_output.video.useCrfRate);
-
-  addSpin(video, "CRF quality", 0, 68, m_output.video.crf);
-  addSpin(video, "bitrate", 0, 100000, m_output.video.bitrate);
-
-  // i know this is quite ugly, but whatever.
-  addCombo(video, "fps", {
-    {"copy source", -1.0},
-    {"5",   5.0},
-    {"10",  10.0},
-    {"15",  15.0},
-    {"20",  20.0},
-    {"23.976", 23.976},
-    {"24", 24.0},
-    {"25", 25.0},
-    {"30", 30.0},
-    {"50", 50.0},
-    {"60", 60.0},
-    {"72", 72.0},
-  }, m_output.video.fps);
-
-
-  auto audio = new QTreeWidgetItem(output, {"audio", ""});
-  audio->setExpanded(true);
-  addCheck(audio, "enabled", m_output.audio.enabled);
-
-  addCombo(audio, "codec", {
-    {"copy source", "copy"},
-    {"AAC", "aac"},
-    {"Ogg Opus", "libopus"},
-    {"Ogg Vorbis", "libvorbis"},
-    {"MP3 LAME", "libmp3lame"},
-    {"FLAC", "flac"},
-    {"WAV 16-bit PCM", "pcm_s16le"},
-    {"WAV 32-bit float", "pcm_f32le"},
-  }, m_output.audio.codec);
-
-  addSpin(audio, "bitrate", 32, 512, m_output.audio.bitrate);
-
-  addCombo(audio, "sample rate", {
-    {"copy source", -1},
-    {"8000Hz", 8000},
-    {"11025Hz", 11025},
-    {"16000Hz", 16000},
-    {"22050Hz", 22050},
-    {"32000Hz", 32000},
-    {"44100Hz", 44100},
-    {"48000Hz", 48000},
-    {"96000Hz", 96000},
-    {"176400Hz", 176400},
-  }, m_output.audio.sampleRate);
-
-
-  auto ffArgs = new QLineEdit(m_tree);
-  ffArgs->setText(m_output.ffargs);
-  connect(ffArgs, &QLineEdit::textChanged, this, [this](const QString& text) { m_output.ffargs = text; });
-  addControl(output, "advanced args", ffArgs);
+  m_output = MK_BUILTIN_PRESETS[m_preset->currentIndex()].settings;
+  populateOutputWidget();
 }

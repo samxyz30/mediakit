@@ -5,7 +5,6 @@
 
 // implementation of TrimSlider in VideoPlayer.cpp
 
-// TODO: middle click to drag and pan around
 class TrimSlider : public QWidget {
   Q_OBJECT
 public:
@@ -184,6 +183,7 @@ private:
   }
 
   void mouseMoveEvent(QMouseEvent* evt) override {
+    // pan around timeline
     if (m_panning) {
       int deltaPx = evt->pos().x() - m_lastMouse.x();
       qint64 dur = m_viewEnd - m_viewStart;
@@ -194,6 +194,7 @@ private:
       update();
       return;
     }
+
 
     if (m_drag != Drag::None) {
       const qint64 ms = x2time(evt->position().x());

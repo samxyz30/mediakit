@@ -3,10 +3,10 @@
 
 class QComboBox;
 
-class SettingsWindow : public QDialog {
+class MkSettingsWindow : public QDialog {
   Q_OBJECT
 public:
-  SettingsWindow(QWidget* parent = nullptr);
+  MkSettingsWindow(QWidget* parent = nullptr);
   static void reloadSettings();
   void saveSettings();
 

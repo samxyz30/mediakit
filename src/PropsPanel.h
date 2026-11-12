@@ -102,7 +102,6 @@ static const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
 
 
 class QTreeWidget;
-class QTreeWidgetItem;
 class QJsonObject;
 class QComboBox;
 
@@ -119,8 +118,8 @@ private:
   QLabel* m_title = nullptr;
   QComboBox* m_preset = nullptr;
   QTreeWidget* m_tree = nullptr;
-  QTreeWidgetItem* m_outputItem = nullptr;
+  QWidget* m_outputItem = nullptr;
 
   void populateData(const QJsonObject& root);
-  void populateOutputWidget(QTreeWidgetItem* output);
+  void populateOutputWidget();
 };

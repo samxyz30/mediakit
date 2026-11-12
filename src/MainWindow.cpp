@@ -77,7 +77,7 @@ MkMainWindow::MkMainWindow() {
 
   auto settingsAct = fileTb->addAction("settings");
   connect(settingsAct, &QAction::triggered, this, [this]() {
-    SettingsWindow cfg(this);
+    MkSettingsWindow cfg(this);
     cfg.exec();
   });
 
