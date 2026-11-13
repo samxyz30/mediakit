@@ -10,6 +10,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message(NOTICE "[${PROJECT_NAME}] building for target '${CMAKE_BUILD_TYPE}'")
 
+# --- version.h.in
+execute_process(
+  COMMAND git rev-parse --short HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT GIT_HASH)
+  set(GIT_HASH "unknown")
+endif()
+
+string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M:%S")
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/src/version.h.in
+  ${CMAKE_BINARY_DIR}/version.h
+  @ONLY
+)
+
 
 # --- dependencies
 find_package(Qt6 REQUIRED
@@ -24,6 +43,7 @@ message(NOTICE "[${PROJECT_NAME}] QT: ${Qt6_VERSION}")
 file(GLOB_RECURSE APP_SRCS CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
 
 qt_add_executable(mediakit ${APP_SRCS})
+target_include_directories(mediakit PRIVATE src ${CMAKE_BINARY_DIR})
 target_link_libraries(mediakit PRIVATE
   Qt6::Widgets Qt6::Multimedia Qt6::MultimediaWidgets
 )

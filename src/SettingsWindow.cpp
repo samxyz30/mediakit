@@ -7,16 +7,16 @@
 #include <QComboBox>
 #include <QApplication>
 
+#include <version.h>  // from version.h.in
 
 MkSettingsWindow::MkSettingsWindow(QWidget* parent) : QDialog(parent) {
   setMinimumSize(400, 300);
   auto layout = new QVBoxLayout(this);
   QSettings cfg;
 
-  auto infostr = QString("Qt %1\nffmpeg: %2\nffprobe: %3")
-    .arg(qVersion())
-    .arg(MkCommon::findTool("ffmpeg"))
-    .arg(MkCommon::findTool("ffprobe"));
+  auto infostr = QString("version: %1\nQt %2\n\nffmpeg: %3\nffprobe: %4")
+    .arg(VERSION_STRING, qVersion())
+    .arg(MkCommon::findTool("ffmpeg"), MkCommon::findTool("ffprobe"));
   layout->addWidget(new QLabel(infostr, this));
 
   layout->addWidget(new QLabel("style:", this));
