@@ -7,7 +7,6 @@
 #include <QComboBox>
 #include <QApplication>
 
-// TODO rethink this. i don't like the way i repeat the config a lot here and i wish it was easier
 
 MkSettingsWindow::MkSettingsWindow(QWidget* parent) : QDialog(parent) {
   setMinimumSize(400, 300);

@@ -135,7 +135,7 @@ void MkPropsPanel::populateOutputWidget() {
     {"WAV 32-bit float", "pcm_f32le"},
   }, m_output.audio.codec);
 
-  addSpin(aud_l, "bitrate", 32, 512, m_output.audio.bitrate);
+  addSpin(aud_l, "bitrate", 0, 512, m_output.audio.bitrate);
 
   addCombo(aud_l, "sample rate", {
     {"copy source", -1},
