@@ -1,4 +1,5 @@
 import platform
+import sys
 import urllib.request
 import tarfile
 import zipfile
@@ -14,6 +15,9 @@ def main():
   elif platform.system() == "Linux":
     is_os = "linux64"
     is_ext = "tar.xz"
+
+    print("will not vendor on linux due to issues with this script. advised to install and manage your own ffmpeg under PATH or bin/tools.")
+    sys.exit(0)
 
 
   output = Path("./dist/bin/tools/")
