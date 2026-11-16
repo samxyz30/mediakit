@@ -8,13 +8,14 @@
 #include <QLineEdit>
 
 
-static void addSpin(QFormLayout* parent, const QString& label, int min, int max, int& setting) {
+static QSpinBox* addSpin(QFormLayout* parent, const QString& label, int min, int max, int& setting) {
   auto spin = new QSpinBox;
   spin->setRange(min, max);
   spin->setValue(setting);
   auto* tgt = &setting;
   QObject::connect(spin, &QSpinBox::valueChanged, spin, [tgt](int val) { *tgt = val; });
   parent->addRow(label, spin);
+  return spin;
 }
 
 static void addCheck(QFormLayout* parent, const QString& label, bool& setting) {
@@ -26,7 +27,7 @@ static void addCheck(QFormLayout* parent, const QString& label, bool& setting) {
 }
 
 template<typename T>
-static void addCombo(QFormLayout* parent, const QString& label,
+static QComboBox* addCombo(QFormLayout* parent, const QString& label,
                      const QList<QPair<QString, QVariant>>& opts, T& setting) {
   auto combo = new QComboBox;
   for (const auto& [key, prop] : opts) combo->addItem(key, prop);
@@ -37,6 +38,7 @@ static void addCombo(QFormLayout* parent, const QString& label,
     *tgt = combo->itemData(idx).value<T>();
   });
   parent->addRow(label, combo);
+  return combo;
 }
 
 
@@ -95,12 +97,23 @@ void MkPropsPanel::populateOutputWidget() {
     {"AV1 SVT", "libsvtav1"},
   }, m_output.video.codec);
 
-  // TODO: maybe instead let's grey out the spinboxes?? do something more UX friendly
-  addCheck(vid_l, "use CRF instead of bitrate", m_output.video.useCrfRate);
 
-  addSpin(vid_l, "CRF quality", 0, 68, m_output.video.crf);
-  addSpin(vid_l, "bitrate", 0, 100000, m_output.video.bitrate);
+  auto rate_type = addCombo(vid_l, "rate control", {
+    {"CRF", true},
+    {"bitrate", false},
+  }, m_output.video.useCrfRate);
 
+  auto crf_spin = addSpin(vid_l, "CRF quality", 0, 68, m_output.video.crf);
+  auto btr_spin = addSpin(vid_l, "bitrate", 0, 100000, m_output.video.bitrate);
+
+  connect(rate_type, &QComboBox::currentIndexChanged, this, [this, crf_spin, btr_spin](int idx) {
+    crf_spin->setVisible(m_output.video.useCrfRate);
+    btr_spin->setVisible(!m_output.video.useCrfRate);
+  });
+  crf_spin->setVisible(m_output.video.useCrfRate);
+  btr_spin->setVisible(!m_output.video.useCrfRate);
+
+  
   // i know this is quite ugly, but whatever.
   addCombo(vid_l, "fps", {
     {"copy source", -1.0},

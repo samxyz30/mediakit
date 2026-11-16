@@ -113,6 +113,7 @@ void MkPropsPanel::loadFile(const QString& path) {
 }
 
 
+// TODO: maybe it makes more sense for this to be in PropsPanelOutput.cpp
 void MkPropsPanel::exportTranscode(MkJobQueue* queue, const MkVideoTrimRange trimRange) {
   if (m_currentPath.isEmpty()) {
     QMessageBox::warning(this, "export", "no file selected");

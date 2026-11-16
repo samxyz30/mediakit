@@ -32,6 +32,7 @@ struct MkOutputSettings {
 
 
 // presets
+// TODO: store this in json or something so people can make their own. this will become pretty important
 struct MkOutputPreset {
   QString name;
   MkOutputSettings settings;
@@ -45,7 +46,7 @@ static const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
   }},
   {"H.264 Small File", MkOutputSettings{
     "mp4",
-    MkOutputVideoSettings{true, "libx264", true, 30, 2500, -1.0},
+    MkOutputVideoSettings{true, "libx264", false, 30, 2200, -1.0},
     MkOutputAudioSettings{true, "aac", 96, 48000},
   }},
   {"AV1 Fast 30fps", MkOutputSettings{
