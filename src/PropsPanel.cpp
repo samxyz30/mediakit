@@ -240,6 +240,7 @@ void MkPropsPanel::populateData(const QJsonObject& root) {
       auto s_item = new QTreeWidgetItem(sect, {lbl, ""});
       s_item->setExpanded(true);
 
+      // TODO: add formatters for fields like framerate, duration...
       const auto tryField = [&](const QString& key, const QString& prettyName) {
         const QString val = valueof(stream, key);
         if (!val.isEmpty()) new QTreeWidgetItem(s_item, {prettyName, val});

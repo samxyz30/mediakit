@@ -3,6 +3,8 @@
 #include <QPainter>
 #include <QMouseEvent>
 
+#define TRIM_TRACK_COLOR 0x00A2FF
+
 // implementation of TrimSlider in VideoPlayer.cpp
 
 class TrimSlider : public QWidget {
@@ -121,7 +123,7 @@ private:
 
     // background track
     p.setPen(Qt::NoPen);
-    p.setBrush(QColor(pal.color(QPalette::Midlight)));
+    p.setBrush(pal.color(QPalette::Midlight));
     p.drawRect(QRectF(left, trackY - trackH / 2, trackW, trackH));
     
     if (m_duration <= 0) return;
@@ -130,7 +132,7 @@ private:
     const double xPlay = time2x(m_position);
 
     // selected trim track
-    p.setBrush(QColor(pal.color(QPalette::Highlight)));
+    p.setBrush(QColor(TRIM_TRACK_COLOR));
     p.drawRect(QRectF(xStart, trackY - trackH/2, qMax<double>(0, xEnd-xStart), trackH));
 
     
@@ -139,11 +141,11 @@ private:
       p.drawRect(QRectF(x-4, trackY-15, 8, 30));
     };
 
-    drawHandle(xStart, QColor(pal.color(QPalette::Text)));
-    drawHandle(xEnd, QColor(pal.color(QPalette::Text)));
+    drawHandle(xStart, pal.color(QPalette::Text));
+    drawHandle(xEnd, pal.color(QPalette::Text));
 
     // playhead
-    p.setPen(QPen(pal.color(QPalette::BrightText), 2));
+    p.setPen(QPen(pal.color(QPalette::Text), 2));
     p.drawLine(QPointF(xPlay, trackY-19), QPointF(xPlay, trackY+19));
   }
 

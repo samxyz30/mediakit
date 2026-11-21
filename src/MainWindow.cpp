@@ -47,8 +47,8 @@ MkMainWindow::MkMainWindow() {
   connect(openAct, &QAction::triggered, this, [this, mediaList]() {
     const auto paths = QFileDialog::getOpenFileNames(
       this,
-      "open video", QString(),
-      "video files (*.mp4 *.mkv *.mov *.avi *.webm);;all files (*)"
+      "open media", QString(),
+      "video files (*.mp4 *.mkv *.mov *.avi *.webm);;audio files (*.wav *.flac *.mp3 *.ogg *.opus);;all files (*)"
     );
 
     if (!paths.isEmpty()) mediaList->addFiles(paths);

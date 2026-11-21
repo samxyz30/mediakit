@@ -70,7 +70,7 @@ void MkPropsPanel::populateOutputWidget() {
     {"WebM", "webm"},
     {"M4A", "m4a"},
     {"Ogg", "ogg"},
-    {"Opus/Ogg", "opus"},
+    {"Opus", "opus"},
     {"MP3", "mp3"},
     {"FLAC", "flac"},
     {"WAV", "wav"},

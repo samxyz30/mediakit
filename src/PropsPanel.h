@@ -32,7 +32,7 @@ struct MkOutputSettings {
 
 
 // presets
-// TODO: store this in json or something so people can make their own. this will become pretty important
+// (1) TODO: store this in json or something so people can make their own. this will become pretty important
 struct MkOutputPreset {
   QString name;
   MkOutputSettings settings;
@@ -100,6 +100,36 @@ static const QList<MkOutputPreset> MK_BUILTIN_PRESETS = {
   }},
 };
 
+/*
+// (1) TODO: something like this maybe?
+#include <QJsonObject>
+class MkPresetManager {
+public:
+  QList<MkOutputPreset> m_presets;
+  MkPresetManager() {
+
+  }
+
+  QJsonObject saveJson() const {
+    QJsonObject result;
+    for (const auto p : m_presets) {
+      QJsonObject obj;
+      auto s = &p.settings;
+      obj["container"] = s->container;
+      obj["ffargs"] = s->ffargs;
+      obj["video_enabled"] = s->video.enabled;
+      obj["video_codec"]   = s->video.codec;
+      obj["video_useCrfRate"] = s->video.useCrfRate;
+      obj["video_crf"] = s->video.crf;
+      obj["video_bitrate"] = s->video.bitrate;
+      obj["video_fps"] = s->video.fps;
+      result[p.name] = obj;
+    }
+    qDebug() << result;
+    return result;
+  }
+};
+*/
 
 
 class QTreeWidget;

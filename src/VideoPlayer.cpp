@@ -163,11 +163,12 @@ void MkVideoPlayer::exportTrim(MkJobQueue* queue) {
   }
 
   // TODO: unhardcode .mp4 and video assumptions
-  const QString defaultName = QFileInfo(m_currentPath).completeBaseName() + "_trimmed.mp4";
+  QFileInfo info(m_currentPath);
+  const QString defaultName = info.completeBaseName() + "_trimmed." + info.completeSuffix();
   const QString outFile = QFileDialog::getSaveFileName(
     this,
-    "export video", QFileInfo(m_currentPath).absolutePath() + "/" + defaultName,
-    "MP4 (*.mp4);;Matroska (*.mkv);;All files (*)"
+    "export trimmed", info.absolutePath() + "/" + defaultName,
+    "All files (*)"
   );
 
   if (outFile.isEmpty()) return;
